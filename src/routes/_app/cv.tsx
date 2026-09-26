@@ -13,6 +13,7 @@ import {
   type Entry,
 } from "../../lib/cv-store";
 import { useProgress } from "../../lib/progress-store";
+import { useCertificates } from "../../lib/certificates";
 
 const TITLE = "Free ATS-friendly CV builder · BridgeUni";
 const DESCRIPTION =
@@ -36,6 +37,11 @@ type EntryKey = "experience" | "education";
 
 function CVPage() {
   const { cv, update, loaded } = useCV();
+  // Verified certificates added on the Certify page appear on the CV automatically.
+  const { certificates: serverCerts } = useCertificates();
+  const verified: Certificate[] = serverCerts
+    .filter((c) => c.status === "verified")
+    .map((c) => ({ name: c.course, provider: c.provider, year: c.issuedOn.slice(0, 4) }));
   const { progress } = useProgress();
   const { user } = useAuth();
   const coursesInProgress = COURSES.filter((c) => progress[c.id]?.status === "in-progress");
@@ -61,7 +67,7 @@ function CVPage() {
             </a>
           </p>
 
-          <Tips cv={cv} loaded={loaded} inProgress={coursesInProgress.map((c) => c.name)} />
+          <Tips cv={cv} loaded={loaded} certCount={cv.certificates.length + verified.length} inProgress={coursesInProgress.map((c) => c.name)} />
 
           <div className="mt-6 space-y-5">
             <FormSection title="About you" step={1}>
@@ -189,7 +195,7 @@ function CVPage() {
               <ShieldCheck className="size-4 text-success" aria-hidden /> ATS-friendly format
             </span>
           </div>
-          <CVSheet cv={cv} />
+          <CVSheet cv={cv} verified={verified} />
         </section>
       </div>
 
@@ -210,7 +216,7 @@ function CVPage() {
 
 /* ================= Tips ================= */
 
-function Tips({ cv, loaded, inProgress }: { cv: CV; loaded: boolean; inProgress: string[] }) {
+function Tips({ cv, loaded, certCount, inProgress }: { cv: CV; loaded: boolean; certCount: number; inProgress: string[] }) {
   if (!loaded) return null;
   const tips: ReactNode[] = [];
   if (!cv.email.trim() || !cv.phone.trim())
@@ -219,7 +225,7 @@ function Tips({ cv, loaded, inProgress }: { cv: CV; loaded: boolean; inProgress:
     tips.push("Write a summary of at least 60 characters — 2 or 3 short sentences.");
   const skills = splitSkills(cv.skills).length;
   if (skills < 5) tips.push(`List at least 5 skills (you have ${skills}).`);
-  if (cv.certificates.length === 0)
+  if (certCount === 0)
     tips.push(
       inProgress.length > 0 ? (
         <>
@@ -439,12 +445,19 @@ function Certificates({ items, onChange }: { items: Certificate[]; onChange: (it
 
 const isFilled = (e: Entry) => [e.title, e.org, e.dates, e.details].some((v) => v.trim());
 
-function CVSheet({ cv }: { cv: CV }) {
+function CVSheet({ cv, verified = [] }: { cv: CV; verified?: Certificate[] }) {
   const contact = [cv.location, cv.phone, cv.email, cv.linkedin].map((s) => s.trim()).filter(Boolean);
   const skills = splitSkills(cv.skills);
   const experience = cv.experience.filter(isFilled);
   const education = cv.education.filter(isFilled);
-  const certificates = cv.certificates.filter((c) => c.name.trim());
+  // Verified (server) certificates first, then ones added on this page — no duplicates.
+  const seen = new Set<string>();
+  const certificates = [...verified, ...cv.certificates].filter((c) => {
+    const key = c.name.trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   const isEmpty =
     !cv.name.trim() && !cv.summary.trim() && !skills.length && !experience.length && !education.length;
 
@@ -489,7 +502,7 @@ function CVSheet({ cv }: { cv: CV }) {
       )}
 
       {certificates.length > 0 && (
-        <CVSection title="Certifications">
+        <CVSection title="Certificates">
           <ul>
             {certificates.map((c, i) => {
               const meta = [c.provider, c.year].map((s) => s.trim()).filter(Boolean);

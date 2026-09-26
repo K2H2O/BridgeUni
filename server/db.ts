@@ -28,6 +28,21 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
 
+  CREATE TABLE IF NOT EXISTS certificates (
+    id          TEXT PRIMARY KEY,
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    course      TEXT NOT NULL,
+    provider    TEXT NOT NULL,
+    issued_on   TEXT NOT NULL DEFAULT '',
+    reference   TEXT NOT NULL DEFAULT '',            -- certificate ID or link
+    status      TEXT NOT NULL CHECK (status IN ('verified', 'pending')),
+    file_name   TEXT,
+    file_type   TEXT,
+    file_data   BLOB,
+    created_at  TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS certificates_user ON certificates(user_id);
+
   CREATE TABLE IF NOT EXISTS user_data (
     user_id     TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     cv          TEXT NOT NULL,                      -- JSON

@@ -43,7 +43,12 @@ app.use("/api/*", async (c, next) => {
   c.header("Cache-Control", "no-store");
   await next();
 });
-app.use("/api/*", bodyLimit({ maxSize: MAX_DATA_BYTES + 4096, onError: (c) => c.json({ error: "That's too much data." }, 413) }));
+// Certificate uploads (≤ 2 MB file, sent as base64 JSON) get a bigger body limit than everything else.
+const MAX_FILE_BYTES = 2 * 1024 * 1024;
+const tooMuch = (c: Context) => c.json({ error: "That's too much data." }, 413);
+const smallBody = bodyLimit({ maxSize: MAX_DATA_BYTES + 4096, onError: tooMuch });
+const uploadBody = bodyLimit({ maxSize: Math.ceil(MAX_FILE_BYTES * 1.4) + 8192, onError: tooMuch });
+app.use("/api/*", (c, next) => (c.req.path === "/api/certificates" && c.req.method === "POST" ? uploadBody : smallBody)(c, next));
 
 const ip = (c: Context) => c.req.header("x-forwarded-for")?.split(",")[0].trim() ?? getConnInfo(c).remote.address ?? "?";
 
@@ -216,6 +221,92 @@ app.put("/api/data", async (c) => {
 app.get("/api/health", (c) => {
   db.prepare("SELECT 1").get();
   return c.json({ ok: true });
+});
+
+/* ---------- Certificates (saved against the logged-in user only) ---------- */
+
+type CertRow = {
+  id: string; course: string; provider: string; issued_on: string; reference: string;
+  status: "verified" | "pending"; file_name: string | null; file_type: string | null; created_at: string;
+};
+const toCert = (r: CertRow) => ({
+  id: r.id, course: r.course, provider: r.provider, issuedOn: r.issued_on, reference: r.reference,
+  status: r.status, fileName: r.file_name, hasFile: !!r.file_name, createdAt: r.created_at,
+});
+
+/** Allowed uploads, checked by content ("magic bytes"), not just the name the browser sends. */
+const FILE_TYPES: Record<string, (b: Buffer) => boolean> = {
+  "application/pdf": (b) => b.subarray(0, 5).toString("latin1") === "%PDF-",
+  "image/png": (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  "image/jpeg": (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+};
+
+app.get("/api/certificates", (c) => {
+  const user = currentUser(c);
+  if (!user) return c.json({ error: "Please log in." }, 401);
+  const rows = db
+    .prepare("SELECT id, course, provider, issued_on, reference, status, file_name, file_type, created_at FROM certificates WHERE user_id = ? ORDER BY created_at DESC")
+    .all(user.id) as CertRow[];
+  return c.json({ certificates: rows.map(toCert) });
+});
+
+app.post("/api/certificates", async (c) => {
+  const user = currentUser(c);
+  if (!user) return c.json({ error: "Please log in." }, 401);
+  const body = await readJSON(c);
+  const course = str(body.course).trim().slice(0, 120);
+  const provider = str(body.provider).trim().slice(0, 80);
+  const issuedOn = str(body.issuedOn).trim();
+  const reference = str(body.reference).trim().slice(0, 300);
+  if (!course) return c.json({ error: "Enter the course name.", field: "course" }, 400);
+  if (!provider) return c.json({ error: "Enter who gave the certificate.", field: "provider" }, 400);
+  if (issuedOn && !/^\d{4}-\d{2}-\d{2}$/.test(issuedOn)) return c.json({ error: "Pick a valid date.", field: "issuedOn" }, 400);
+  const count = (db.prepare("SELECT COUNT(*) AS n FROM certificates WHERE user_id = ?").get(user.id) as { n: number }).n;
+  if (count >= 50) return c.json({ error: "You've reached the limit of 50 certificates." }, 400);
+
+  let file: { name: string; type: string; data: Buffer } | null = null;
+  const f = body.file as { name?: unknown; type?: unknown; data?: unknown } | undefined;
+  if (f && typeof f === "object") {
+    const type = str(f.type);
+    const check = FILE_TYPES[type];
+    if (!check) return c.json({ error: "Only PDF, PNG or JPG files are allowed.", field: "file" }, 400);
+    const data = Buffer.from(str(f.data), "base64");
+    if (data.length === 0) return c.json({ error: "That file is empty.", field: "file" }, 400);
+    if (data.length > MAX_FILE_BYTES) return c.json({ error: "That file is bigger than 2 MB.", field: "file" }, 400);
+    if (!check(data)) return c.json({ error: "That file isn't a real PDF, PNG or JPG.", field: "file" }, 400);
+    const name = str(f.name).replace(/[^\w.\- ]+/g, "_").slice(0, 100) || "certificate";
+    file = { name, type, data };
+  }
+
+  const row: CertRow = {
+    id: randomUUID(), course, provider, issued_on: issuedOn, reference,
+    status: reference ? "verified" : "pending",
+    file_name: file?.name ?? null, file_type: file?.type ?? null, created_at: new Date().toISOString(),
+  };
+  db.prepare(
+    "INSERT INTO certificates (id, user_id, course, provider, issued_on, reference, status, file_name, file_type, file_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  ).run(row.id, user.id, row.course, row.provider, row.issued_on, row.reference, row.status, row.file_name, row.file_type, file?.data ?? null, row.created_at);
+  return c.json({ certificate: toCert(row) }, 201);
+});
+
+app.get("/api/certificates/:id/file", (c) => {
+  const user = currentUser(c);
+  if (!user) return c.json({ error: "Please log in." }, 401);
+  const row = db
+    .prepare("SELECT file_name, file_type, file_data FROM certificates WHERE id = ? AND user_id = ?")
+    .get(c.req.param("id"), user.id) as { file_name: string | null; file_type: string | null; file_data: Uint8Array | null } | undefined;
+  if (!row?.file_data || !row.file_type) return c.json({ error: "Not found." }, 404);
+  c.header("Content-Type", row.file_type);
+  c.header("Content-Disposition", `inline; filename="${row.file_name ?? "certificate"}"`);
+  c.header("Cache-Control", "private, no-store");
+  return c.body(Buffer.from(row.file_data));
+});
+
+app.delete("/api/certificates/:id", (c) => {
+  const user = currentUser(c);
+  if (!user) return c.json({ error: "Please log in." }, 401);
+  const r = db.prepare("DELETE FROM certificates WHERE id = ? AND user_id = ?").run(c.req.param("id"), user.id);
+  return r.changes ? c.json({ ok: true }) : c.json({ error: "Not found." }, 404);
 });
 
 app.all("/api/*", (c) => c.json({ error: "Not found." }, 404));

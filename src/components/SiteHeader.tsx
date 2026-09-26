@@ -8,8 +8,9 @@ import { Logo } from "./Logo";
 import { SyncBadge } from "./SyncBadge";
 
 const links = [
-  { to: "/cv", label: "CV builder" },
-  { to: "/courses", label: "Free courses" },
+  { to: "/discover", label: "Discover" },
+  { to: "/certify", label: "Certify" },
+  { to: "/cv", label: "My CV" },
   { to: "/varsities", label: "Campus tours" },
 ] as const;
 

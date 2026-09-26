@@ -15,8 +15,10 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppBackupRouteImport } from './routes/_app/backup'
+import { Route as AppCertifyRouteImport } from './routes/_app/certify'
 import { Route as AppCoursesRouteImport } from './routes/_app/courses'
 import { Route as AppCvRouteImport } from './routes/_app/cv'
+import { Route as AppDiscoverRouteImport } from './routes/_app/discover'
 import { Route as AppVarsitiesRouteImport } from './routes/_app/varsities'
 
 const IndexRoute = IndexRouteImport.update({
@@ -48,6 +50,11 @@ const AppBackupRoute = AppBackupRouteImport.update({
   path: '/backup',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCertifyRoute = AppCertifyRouteImport.update({
+  id: '/certify',
+  path: '/certify',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCoursesRoute = AppCoursesRouteImport.update({
   id: '/courses',
   path: '/courses',
@@ -56,6 +63,11 @@ const AppCoursesRoute = AppCoursesRouteImport.update({
 const AppCvRoute = AppCvRouteImport.update({
   id: '/cv',
   path: '/cv',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDiscoverRoute = AppDiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
   getParentRoute: () => AppRoute,
 } as any)
 const AppVarsitiesRoute = AppVarsitiesRouteImport.update({
@@ -70,8 +82,10 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/account': typeof AppAccountRoute
   '/backup': typeof AppBackupRoute
+  '/certify': typeof AppCertifyRoute
   '/courses': typeof AppCoursesRoute
   '/cv': typeof AppCvRoute
+  '/discover': typeof AppDiscoverRoute
   '/varsities': typeof AppVarsitiesRoute
 }
 export interface FileRoutesByTo {
@@ -80,8 +94,10 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/account': typeof AppAccountRoute
   '/backup': typeof AppBackupRoute
+  '/certify': typeof AppCertifyRoute
   '/courses': typeof AppCoursesRoute
   '/cv': typeof AppCvRoute
+  '/discover': typeof AppDiscoverRoute
   '/varsities': typeof AppVarsitiesRoute
 }
 export interface FileRoutesById {
@@ -92,8 +108,10 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/backup': typeof AppBackupRoute
+  '/_app/certify': typeof AppCertifyRoute
   '/_app/courses': typeof AppCoursesRoute
   '/_app/cv': typeof AppCvRoute
+  '/_app/discover': typeof AppDiscoverRoute
   '/_app/varsities': typeof AppVarsitiesRoute
 }
 export interface FileRouteTypes {
@@ -104,8 +122,10 @@ export interface FileRouteTypes {
     | '/signup'
     | '/account'
     | '/backup'
+    | '/certify'
     | '/courses'
     | '/cv'
+    | '/discover'
     | '/varsities'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -114,8 +134,10 @@ export interface FileRouteTypes {
     | '/signup'
     | '/account'
     | '/backup'
+    | '/certify'
     | '/courses'
     | '/cv'
+    | '/discover'
     | '/varsities'
   id:
     | '__root__'
@@ -125,8 +147,10 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_app/account'
     | '/_app/backup'
+    | '/_app/certify'
     | '/_app/courses'
     | '/_app/cv'
+    | '/_app/discover'
     | '/_app/varsities'
   fileRoutesById: FileRoutesById
 }
@@ -181,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBackupRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/certify': {
+      id: '/_app/certify'
+      path: '/certify'
+      fullPath: '/certify'
+      preLoaderRoute: typeof AppCertifyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/courses': {
       id: '/_app/courses'
       path: '/courses'
@@ -193,6 +224,13 @@ declare module '@tanstack/react-router' {
       path: '/cv'
       fullPath: '/cv'
       preLoaderRoute: typeof AppCvRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/discover': {
+      id: '/_app/discover'
+      path: '/discover'
+      fullPath: '/discover'
+      preLoaderRoute: typeof AppDiscoverRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/varsities': {
@@ -208,16 +246,20 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRoute
   AppBackupRoute: typeof AppBackupRoute
+  AppCertifyRoute: typeof AppCertifyRoute
   AppCoursesRoute: typeof AppCoursesRoute
   AppCvRoute: typeof AppCvRoute
+  AppDiscoverRoute: typeof AppDiscoverRoute
   AppVarsitiesRoute: typeof AppVarsitiesRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRoute,
   AppBackupRoute: AppBackupRoute,
+  AppCertifyRoute: AppCertifyRoute,
   AppCoursesRoute: AppCoursesRoute,
   AppCvRoute: AppCvRoute,
+  AppDiscoverRoute: AppDiscoverRoute,
   AppVarsitiesRoute: AppVarsitiesRoute,
 }
 
