@@ -212,6 +212,12 @@ app.put("/api/data", async (c) => {
   return c.json({ updatedAt });
 });
 
+/** For the host's health checks: is the server up and can it reach the database? */
+app.get("/api/health", (c) => {
+  db.prepare("SELECT 1").get();
+  return c.json({ ok: true });
+});
+
 app.all("/api/*", (c) => c.json({ error: "Not found." }, 404));
 
 /* ---------- Production: serve the built site ---------- */

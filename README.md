@@ -38,8 +38,17 @@ One Node server serves the site and the API on `PORT` (default 8787).
 | --- | --- | --- |
 | `PORT` | `8787` | |
 | `DATABASE_PATH` | `data/bridgeuni.db` | Must be on a persistent disk, or accounts are lost on restart. |
-| `NODE_ENV` | — | Set to `production` so login cookies are `Secure` (requires HTTPS). |
+| `NODE_ENV` | — | Optional. Login cookies are `Secure` automatically when served over HTTPS. Don't set it on Railway (it would skip build tools). |
 | `SIGNUP_LIMIT_PER_HOUR` | `40` | Sign-ups per connection per hour (internet cafés share one connection). |
+
+## Deploy on Railway
+
+1. railway.com → **New Project** → **Deploy from GitHub repo** → pick this repo.
+2. Right-click the service → **Attach volume**, mount path `/data`.
+3. **Variables:** `DATABASE_PATH=/data/bridgeuni.db`.
+4. **Settings → Networking → Generate Domain**.
+
+`railway.json` sets the build, start command and health check (`/api/health`).
 
 ## How it's built
 

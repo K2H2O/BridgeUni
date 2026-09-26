@@ -48,7 +48,8 @@ function setSessionCookie(c: Context, token: string, expires: Date): void {
   setCookie(c, COOKIE, token, {
     httpOnly: true,
     sameSite: "Lax",
-    secure: process.env.NODE_ENV === "production",
+    // Secure whenever the site is served over HTTPS (hosts like Railway terminate TLS at a proxy).
+    secure: process.env.NODE_ENV === "production" || c.req.header("x-forwarded-proto") === "https",
     path: "/",
     expires,
   });
