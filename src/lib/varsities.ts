@@ -25,6 +25,11 @@ export type Institution = {
   website: string;
   /** The institution's own tour / visit option, if it has one. */
   officialTour?: { label: string; url: string; note: string };
+  /**
+   * The institution's own live 360° tour, shown inside the explorer (credited, loaded only on tap).
+   * When set, it replaces the sample scene for this institution.
+   */
+  liveTour?: { url: string; title: string; credit: string };
   pathway: PathwayId;
   scenes: Scene[];
   sources: string[];
@@ -62,6 +67,11 @@ export const INSTITUTIONS: Institution[] = [
       note: "The university's own online orientation for the Bloemfontein Campus.",
     },
     pathway: "university",
+    liveTour: {
+      url: "https://www.ufs.ac.za/virtualorientationbfn/",
+      title: "UFS Virtual Orientation — official 360° tour of the Bloemfontein Campus",
+      credit: "Official tour by the University of the Free State, shown from ufs.ac.za",
+    },
     scenes: [SAMPLE_SCENE],
     sources: ["https://www.ufs.ac.za/virtualorientationbfn/"],
   },

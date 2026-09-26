@@ -1,20 +1,27 @@
-/** BridgeUni wordmark: a bridge arc in a rounded square. */
-export function Logo({ inverted = false }: { inverted?: boolean }) {
+/**
+ * BridgeUni logo. `mark` = the bridge symbol + wordmark (header); `full` = the complete logo with
+ * the tagline, on a white tile so it reads on dark backgrounds too (footer).
+ */
+export function Logo({ variant = "mark" }: { variant?: "mark" | "full" }) {
+  if (variant === "full") {
+    return (
+      <span className="inline-block rounded-xl bg-card px-4 py-3">
+        <img
+          src="/brand/logo-full.png"
+          alt="BridgeUni — Connecting vision to information"
+          width={220}
+          height={107}
+          className="h-auto w-[220px]"
+        />
+      </span>
+    );
+  }
   return (
     <span className="inline-flex items-center gap-2">
-      <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden>
-        <rect width="32" height="32" rx="8" fill={inverted ? "var(--primary-foreground)" : "var(--primary)"} />
-        <path
-          d="M6 22V17c3-5 7-7.5 10-7.5S23 12 26 17v5M6 17h20M11 13v9M16 10v12M21 13v9"
-          fill="none"
-          stroke={inverted ? "var(--primary)" : "var(--primary-foreground)"}
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span className={`font-display text-xl font-extrabold tracking-tight ${inverted ? "text-primary-foreground" : "text-foreground"}`}>
-        Bridge<span className={inverted ? "text-accent" : "text-primary"}>Uni</span>
+      <img src="/brand/logo-mark.png" alt="" width={62} height={21} className="h-[21px] w-[62px] shrink-0" />
+      <span className="font-display text-[1.15rem] font-extrabold uppercase leading-none tracking-[0.14em]">
+        <span className="text-brand-navy">Bridge</span>
+        <span className="text-brand-blue">Uni</span>
       </span>
     </span>
   );

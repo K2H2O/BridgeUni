@@ -81,7 +81,11 @@ function VarsityExplorer() {
       <div id="explorer-panel" role="tabpanel" className="mx-auto grid max-w-6xl gap-8 px-4 pb-16 pt-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <div className="min-w-0 space-y-8">
           {/* key forces a fresh tour when switching institution */}
-          <Tour key={inst.id} inst={inst} tierInfo={tierInfo} />
+          {inst.liveTour ? (
+            <LiveTour key={inst.id} inst={inst} tierInfo={tierInfo} />
+          ) : (
+            <Tour key={inst.id} inst={inst} tierInfo={tierInfo} />
+          )}
           <DayInTheLife inst={inst} />
         </div>
         <InstitutionFacts inst={inst} />
@@ -184,6 +188,62 @@ function Tour({ inst, tierInfo }: { inst: Institution; tierInfo: TierInfo | null
         {isSample && inst.officialTour && (
           <> For the real campus, see the <a href={inst.officialTour.url} target="_blank" rel="noreferrer" className="link">{inst.officialTour.label}</a>.</>
         )}
+      </p>
+    </section>
+  );
+}
+
+/* ---------------- Official live tour (e.g. UFS) ---------------- */
+
+function LiveTour({ inst, tierInfo }: { inst: Institution; tierInfo: TierInfo | null }) {
+  const live = inst.liveTour!;
+  const [started, setStarted] = useState(false);
+  const saveData = tierInfo?.tier === "flat";
+  return (
+    <section aria-labelledby="tour-heading">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 id="tour-heading" className="text-2xl font-extrabold">{inst.short} campus tour</h2>
+          <p className="text-sm text-muted-foreground">Live 360° · Official tour by {inst.name}</p>
+        </div>
+        <span className="tag bg-success-soft text-success">Real campus</span>
+      </div>
+
+      <div className="mt-4">
+        {!started ? (
+          <div className="relative flex h-[42vh] max-h-[420px] min-h-[260px] flex-col items-center justify-center gap-4 overflow-hidden rounded-xl bg-primary-deep p-6 text-center text-primary-foreground">
+            <Orbit className="size-10 text-accent" aria-hidden />
+            <p className="max-w-sm text-sm opacity-90">
+              Fly over the real {inst.mangaungCampuses[0]} in 360°. Drag to look around and tap the pins to explore.
+            </p>
+            {saveData && (
+              <p className="max-w-sm rounded-md bg-primary-foreground/10 px-3 py-2 text-xs">
+                Heads up: this tour uses more data than the rest of BridgeUni. Best on Wi-Fi.
+              </p>
+            )}
+            <button type="button" onClick={() => setStarted(true)}
+              className="btn-solid border-accent bg-accent text-accent-foreground hover:border-accent hover:bg-accent-soft">
+              <Play className="size-4" aria-hidden /> Start the live tour
+            </button>
+          </div>
+        ) : (
+          <iframe
+            src={live.url}
+            title={live.title}
+            allow="fullscreen; gyroscope; accelerometer; xr-spatial-tracking"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            className="block h-[64vh] max-h-[600px] min-h-[320px] w-full rounded-xl border-0 bg-primary-deep"
+          />
+        )}
+      </div>
+
+      <p className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+        <span>{live.credit}.</span>
+        <a href={live.url} target="_blank" rel="noreferrer" className="link inline-flex min-h-10 items-center gap-1">
+          Open full screen <ExternalLink className="size-3.5" aria-hidden />
+          <span className="sr-only">(opens ufs.ac.za in a new tab)</span>
+        </a>
       </p>
     </section>
   );

@@ -7,7 +7,7 @@ export function SiteFooter() {
     <footer className="no-print bg-primary-deep text-primary-foreground">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div className="lg:col-span-2">
-          <Logo inverted />
+          <Logo variant="full" />
           <p className="mt-3 max-w-sm text-sm opacity-80">
             Free CVs that get past hiring filters, and free courses that make them stronger. Built for young job
             seekers in Mangaung.

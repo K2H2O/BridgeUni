@@ -13,11 +13,17 @@
   --border: oklch(0.9 0.012 255);
   --border-strong: oklch(0.8 0.02 255);
 
-  --primary: oklch(0.5 0.17 256);
-  --primary-hover: oklch(0.44 0.17 256);
+  /* Brand — from the BridgeUni logo */
+  --brand-navy: #13293e; /* "BRIDGE" and the upper arc */
+  --brand-blue: #1c98e0; /* "UNI" and the bridge — large/bold use only (3.2:1 on white) */
+  --brand-tagline: #205d86;
+
+  /* Deeper shade of the logo blue so white button text stays readable (5.0:1) */
+  --primary: #1673b8;
+  --primary-hover: #115e97;
   --primary-foreground: oklch(1 0 0);
-  --primary-soft: oklch(0.95 0.03 250);
-  --primary-deep: oklch(0.3 0.1 262);
+  --primary-soft: #e8f4fc;
+  --primary-deep: var(--brand-navy);
 
   --accent: oklch(0.8 0.15 75);
   --accent-foreground: oklch(0.26 0.05 60);
@@ -36,7 +42,7 @@
   --sector-agriculture: oklch(0.56 0.14 140);
   --sector-jobskills: oklch(0.6 0.15 60);
 
-  --ring: oklch(0.62 0.17 256);
+  --ring: var(--brand-blue);
   --ink: oklch(0 0 0); /* the CV sheet: pure black on white */
   --radius: 0.75rem;
 }
@@ -56,6 +62,9 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-soft: var(--primary-soft);
   --color-primary-deep: var(--primary-deep);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-tagline: var(--brand-tagline);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-soft: var(--accent-soft);
